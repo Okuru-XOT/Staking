@@ -115,11 +115,11 @@ interface IERC20 {
     ) external returns (bool);
 }
 contract Stake is Pausable, Ownable, ReentrancyGuard {
-    IERC20 XOTToken;
+    IERC20 public XOTToken;
     uint256 public Duration = 41472000;    //  Days (16 * 30 * 24 * 60 * 60)
     uint8 public totalStakers;
-    uint256 rewardAmount ;
-    mapping (address => uint256 ) _balances;
+    uint256 public rewardAmount ;
+    mapping (address => uint256 ) public _balances;
     struct StakeInfo {        
         uint256 startTime;
         uint256 endTime;        
@@ -127,7 +127,7 @@ contract Stake is Pausable, Ownable, ReentrancyGuard {
         uint256 claimed;       
     }
     event Staked(address indexed from, uint256 amount);
-    event Claimed(address indexed from, uint256 amount);
+    event Unstake(address indexed from, uint256 amount);
     event AddRewardTokens(uint256);
     mapping(address => StakeInfo) public stakeInfos;
     mapping(address => bool) public addressStaked;
@@ -139,13 +139,13 @@ contract Stake is Pausable, Ownable, ReentrancyGuard {
         _balances[address(this)] = rewardAmount;   
         totalStakers = 0;
     }    
-    function claimReward() external returns (bool){
+    function unstaketoken() external returns (bool){
         require(addressStaked[_msgSender()] == true, "You are not participated");
         require(stakeInfos[_msgSender()].endTime < block.timestamp, "Stake Time is not over yet");
         require(stakeInfos[_msgSender()].claimed == 0, "Already claimed");
-        stakeInfos[_msgSender()].claimed ==  stakeInfos[_msgSender()].amount + (stakeInfos[_msgSender()].amount * 25 / 1000);
+        stakeInfos[_msgSender()].claimed = stakeInfos[_msgSender()].amount + (stakeInfos[_msgSender()].amount * 25 / 1000);
         XOTToken.transfer(_msgSender(),  stakeInfos[_msgSender()].amount + (stakeInfos[_msgSender()].amount * 25 / 1000));
-        emit Claimed(_msgSender(),  stakeInfos[_msgSender()].amount + (stakeInfos[_msgSender()].amount * 25 / 1000));
+        emit Unstake(_msgSender(),  stakeInfos[_msgSender()].amount + (stakeInfos[_msgSender()].amount * 25 / 1000));
         return true;
     }
     function getTokenExpiry() external view returns (uint256) {
